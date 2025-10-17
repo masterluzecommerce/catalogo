@@ -1,0 +1,46 @@
+[
+  {
+    "id": 8864,
+    "sku": 12775085,
+    "nome": "Disjuntor AGW050 3x15a",
+    "marca": "WEG",
+    "categoria": "Comandos Elétricos",
+    "subcategoria": "Disjuntor caixa moldada",
+    "preco": 475.88,
+    "tags": "disjuntor,caixa moldada,weg, tripolar,15a",
+    "imagem_principal": "img/disjuntor-agw050.webp"
+  },
+  {
+    "id": 8865,
+    "sku": 12775086,
+    "nome": "Disjuntor AGW050 3x20a",
+    "marca": "WEG",
+    "categoria": "Comandos Elétricos",
+    "subcategoria": "Disjuntor caixa moldada",
+    "preco": 472.89,
+    "tags": "disjuntor,caixa moldada,weg, tripolar,20a",
+    "imagem_principal": "img/disjuntor-agw050.webp"
+  },
+  {
+    "id": 7577,
+    "sku": 12775087,
+    "nome": "Disjuntor AGW050 3x30a",
+    "marca": "WEG",
+    "categoria": "Comandos Elétricos",
+    "subcategoria": "Disjuntor caixa moldada",
+    "preco": 472.86,
+    "tags": "disjuntor,caixa moldada,weg, tripolar,30a",
+    "imagem_principal": "img/disjuntor-agw050.webp"
+  },
+  {
+    "id": 6196,
+    "sku": 12775098,
+    "nome": "Disjuntor AGW050 3x40a",
+    "marca": "WEG",
+    "categoria": "Comandos Elétricos",
+    "subcategoria": "Disjuntor caixa moldada",
+    "preco": 588.06,
+    "tags": "disjuntor,caixa moldada,weg, tripolar,40a",
+    "imagem_principal": "img/disjuntor-agw050.webp"
+  }
+]
