@@ -1,26 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <!-- ===================== SEO BÁSICO ===================== -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Masterluz • Catálogo Online</title>
   <meta name="description" content="Masterluz - sua loja de material elétrico em Itaipava - Petrópolis. Encontre disjuntores, cabos, tomadas, automação e mais.">
 
-  <!-- ===================== PALETA MASTERLUZ ===================== -->
   <style>
     :root{
-      --bg:#0462AD;
-      --bg-2:#203864;
-      --card:#ffffff;
-      --text:#0B1220;
-      --muted:#6b7280;
-      --brand:#00AEEF;
-      --border:#E8ECF5;
-      --radius:16px;
-      --shadow:0 8px 24px rgba(2,6,23,.08);
+      --bg:#0462AD; --bg-2:#203864; --card:#ffffff; --text:#0B1220;
+      --muted:#6b7280; --brand:#00AEEF; --border:#E8ECF5;
+      --radius:16px; --shadow:0 8px 24px rgba(2,6,23,.08);
     }
-
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;color:var(--text);background:#fff}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -35,11 +26,10 @@
     .searchbar{display:flex;align-items:center;gap:10px;width:100%;max-width:640px}
     .searchbar input{flex:1;border:1px solid var(--border);border-radius:999px;padding:14px 18px;outline:none}
 
-    /* FILTROS: CATEGORIAS + SUBMENUS */
+    /* CATEGORIAS + SUBMENUS */
     main{padding:24px 0}
     .filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
     #cat-bar{display:flex;gap:10px;flex-wrap:wrap;position:relative}
-
     .pill{
       background:#fff;border:1px solid var(--border);border-radius:999px;
       padding:8px 12px;cursor:pointer;font-size:14px;transition:background .2s,color .2s;position:relative
@@ -49,23 +39,24 @@
 
     .cat-item{position:relative}
     .submenu{
-      position:absolute; top:44px; left:0; min-width:220px;
-      background:#fff; border:1px solid var(--border); border-radius:12px;
-      box-shadow:var(--shadow); padding:8px; display:none; z-index:50;
+      position:absolute; left:0; top:100%;  /* cola na pílula, sem gap */
+      min-width:220px; background:#fff; border:1px solid var(--border); border-radius:12px;
+      box-shadow:var(--shadow); padding:8px; display:none; z-index:999; /* sobe sobre tudo */
     }
     .submenu a{
       display:block; padding:8px 10px; border-radius:8px; text-decoration:none; color:var(--text); font-size:14px;
     }
     .submenu a:hover{background:#F3F7FF; color:#0f172a}
 
-    /* Mostrar submenu no hover (desktop) */
+    /* Mostrar submenu no hover e mantê-lo aberto ao passar o mouse sobre ele */
     @media (hover:hover){
-      .cat-item:hover > .submenu{display:block}
+      .cat-item:hover > .submenu,
+      .cat-item > .submenu:hover { display:block; }
     }
-    /* Em dispositivos sem hover (mobile), controlamos com .open */
+    /* No mobile abrimos via classe .open */
     .cat-item.open > .submenu{display:block}
 
-    /* GRID DE PRODUTOS */
+    /* GRID */
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;transition:transform .12s, box-shadow .12s}
     .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(2,6,23,.12)}
@@ -77,7 +68,6 @@
     .actions{display:flex;gap:8px;margin:12px}
     .btn{flex:1;border:none;border-radius:10px;padding:10px;font-weight:600;cursor:pointer;background:var(--brand);color:#fff;transition:background .2s}
     .btn:hover{background:var(--bg-2)}
-    .empty{border:1px dashed var(--border);border-radius:14px;padding:20px;text-align:center;color:#64748b;background:#fff}
 
     /* FOOTER */
     footer{margin-top:24px;background:var(--bg);color:#fff;padding:24px 16px}
@@ -90,12 +80,11 @@
   </style>
 </head>
 <body>
-  <!-- TOPO -->
   <header>
     <div class="container">
       <div class="topbar">
         <div class="brand">
-          <img src="logo-2020112409591056600.png?v=4" alt="Logo Masterluz" class="logo">
+          <img src="logo-2020112409591056600.png?v=5" alt="Logo Masterluz" class="logo">
           <h1 class="sr-only">Masterluz — Catálogo Online</h1>
         </div>
         <div class="searchbar"><input id="search" type="search" placeholder="Buscar produtos..."></div>
@@ -103,7 +92,6 @@
     </div>
   </header>
 
-  <!-- CONTEÚDO -->
   <main class="container" id="app">
     <section class="filters">
       <div id="cat-bar"></div>
@@ -113,7 +101,6 @@
     <section id="empty" class="empty" style="display:none">Nenhum produto encontrado.</section>
   </main>
 
-  <!-- RODAPÉ -->
   <footer>
     <div class="container footer">
       <div class="footer-grid">
@@ -131,37 +118,22 @@
     </div>
   </footer>
 
-  <!-- CONFIG -->
   <script>
-    const STORE = {
-      name:"Masterluz",
-      whatsappNumber:"552422222633",
-      email:"sac@masterluz.com.br",
-      showPrices:true
-    };
-  </script>
+    const STORE = { name:"Masterluz", whatsappNumber:"552422222633", email:"sac@masterluz.com.br", showPrices:true };
 
-  <!-- LÓGICA -->
-  <script>
     const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
     const grid=$("#grid"), empty=$("#empty"), catBar=$("#cat-bar"), search=$("#search");
     let PRODUCTS=[], activeCat="", activeSub="", query="";
 
-    /* ---------- CSV parser (vírgula ou ponto e vírgula) ---------- */
-    function detectSeparator(headerLine){
-      const commas=(headerLine.match(/,/g)||[]).length;
-      const semis=(headerLine.match(/;/g)||[]).length;
-      return semis>commas?';':',';
-    }
-    function parseCSV(text){
-      text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim();
-      if(!text) return {headers:[],rows:[]};
-      const sep=detectSeparator(text.split('\n')[0]);
+    function detectSeparator(h){const c=(h.match(/,/g)||[]).length;const s=(h.match(/;/g)||[]).length;return s>c?';':',';}
+    function parseCSV(t){
+      t=t.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim(); if(!t) return {headers:[],rows:[]};
+      const sep=detectSeparator(t.split('\n')[0]);
       const lines=[], rowPush=()=>{lines.push(row);row=[]}, cellPush=()=>{row.push(cell);cell=''};
       let row=[], cell='', inQ=false;
-      for(let i=0;i<text.length;i++){
-        const ch=text[i], next=text[i+1];
-        if(inQ){ if(ch=='"'&&next=='"'){cell+='"'; i++; continue;} if(ch=='"'){inQ=false;continue;} cell+=ch; continue; }
+      for(let i=0;i<t.length;i++){
+        const ch=t[i], nx=t[i+1];
+        if(inQ){ if(ch=='"'&&nx=='"'){cell+='"'; i++; continue;} if(ch=='"'){inQ=false; continue;} cell+=ch; continue; }
         if(ch=='"'){inQ=true; continue;}
         if(ch==sep){cellPush(); continue;}
         if(ch=='\n'){cellPush(); rowPush(); continue;}
@@ -174,43 +146,33 @@
     }
 
     async function loadFromCSV(){
-      const res=await fetch('produtos.csv',{cache:'no-store'});
-      if(!res.ok) throw new Error('CSV não encontrado');
-      const text=await res.text();
-      const {rows}=parseCSV(text);
+      const r=await fetch('produtos.csv',{cache:'no-store'}); if(!r.ok) throw new Error('CSV');
+      const {rows}=parseCSV(await r.text());
       PRODUCTS=rows.map(p=>{
         const preco=parseFloat(String(p.preco||'').replace(/\./g,'').replace(',','.'));
         let tags=Array.isArray(p.tags)?p.tags:String(p.tags||'').split(',');
         tags=tags.map(t=>String(t).trim()).filter(Boolean);
-        return {
-          id:p.id||"", sku:p.sku||"", nome:p.nome||"", marca:p.marca||"",
+        return { id:p.id||"", sku:p.sku||"", nome:p.nome||"", marca:p.marca||"",
           categoria:p.categoria||"", subcategoria:p.subcategoria||"",
-          preco:isNaN(preco)?null:preco, tags, imagem_principal:p.imagem_principal||""
-        };
+          preco:isNaN(preco)?null:preco, tags, imagem_principal:p.imagem_principal||"" };
       });
     }
     async function loadFromJSON(){
-      const res=await fetch('produtos.json',{cache:'no-store'});
-      if(!res.ok) throw new Error('JSON não encontrado');
-      const raw=await res.json();
+      const r=await fetch('produtos.json',{cache:'no-store'}); if(!r.ok) throw new Error('JSON');
+      const raw=await r.json();
       PRODUCTS=(raw||[]).map(p=>{
         const preco=(typeof p.preco==='number')?p.preco:parseFloat(String(p.preco||'').replace(',','.'));
         let tags=Array.isArray(p.tags)?p.tags:String(p.tags||'').split(',');
         tags=tags.map(t=>String(t).trim()).filter(Boolean);
-        return {
-          id:p.id||"", sku:p.sku||"", nome:p.nome||"", marca:p.marca||"",
+        return { id:p.id||"", sku:p.sku||"", nome:p.nome||"", marca:p.marca||"",
           categoria:p.categoria||"", subcategoria:p.subcategoria||"",
-          preco:isNaN(preco)?null:preco, tags, imagem_principal:p.imagem_principal||""
-        };
+          preco:isNaN(preco)?null:preco, tags, imagem_principal:p.imagem_principal||"" };
       });
     }
-    async function loadProducts(){
-      try{ await loadFromCSV(); } catch(e){ await loadFromJSON(); }
-    }
+    async function loadProducts(){ try{await loadFromCSV();}catch(e){await loadFromJSON();} }
 
     const fmt=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
-    /* ----- construir barra de categorias com submenu de subcategorias (hover) ----- */
     function buildCatsWithSubmenus(){
       const cats=[...new Set(PRODUCTS.map(p=>p.categoria).filter(Boolean))].sort();
       catBar.innerHTML="";
@@ -221,7 +183,6 @@
       bAll.onclick=()=>{activeCat="";activeSub=""; render(); buildCatsWithSubmenus();};
       allWrap.appendChild(bAll); catBar.appendChild(allWrap);
 
-      // Demais categorias
       cats.forEach(cat=>{
         const wrap=document.createElement("div"); wrap.className="cat-item";
         const btn=document.createElement("button");
@@ -230,23 +191,18 @@
         const subs=[...new Set(PRODUCTS.filter(p=>p.categoria===cat).map(p=>p.subcategoria).filter(Boolean))].sort();
         if(subs.length){
           const menu=document.createElement("div"); menu.className="submenu";
-          menu.innerHTML = [`<a href="#" data-sub="">Todas as subcategorias</a>`]
-            .concat(subs.map(s=>`<a href="#" data-sub="${s.replace(/"/g,'&quot;')}">${s}</a>`))
-            .join("");
+          menu.innerHTML=[`<a href="#" data-sub="">Todas as subcategorias</a>`]
+            .concat(subs.map(s=>`<a href="#" data-sub="${s.replace(/"/g,'&quot;')}">${s}</a>`)).join("");
 
-          // clique/tap nas subcategorias
+          // clique de subcategoria
           menu.addEventListener('click',(e)=>{
             const a=e.target.closest('a'); if(!a) return;
             e.preventDefault();
-            activeCat=cat;
-            activeSub=a.dataset.sub || "";
-            wrap.classList.remove('open');
-            render(); buildCatsWithSubmenus();
+            activeCat=cat; activeSub=a.dataset.sub||"";
+            wrap.classList.remove('open'); render(); buildCatsWithSubmenus();
           });
 
-          wrap.appendChild(menu);
-
-          // no mobile (sem hover) abre/fecha
+          // mobile: abre/fecha
           btn.addEventListener('click',(e)=>{
             const mql=window.matchMedia('(hover: none)');
             if(mql.matches){
@@ -255,20 +211,20 @@
               wrap.classList.toggle('open');
             }
           });
-        }else{
-          // categoria sem subcategorias: clique filtra direto
-          btn.addEventListener('click', ()=>{
-            activeCat = (activeCat===cat ? "" : cat);
-            activeSub = "";
-            render(); buildCatsWithSubmenus();
-          });
-        }
 
-        wrap.appendChild(btn);
+          wrap.appendChild(btn);
+          wrap.appendChild(menu);
+        } else {
+          // sem subcategorias: filtra direto
+          btn.addEventListener('click',()=>{
+            activeCat=(activeCat===cat?"":cat); activeSub=""; render(); buildCatsWithSubmenus();
+          });
+          wrap.appendChild(btn);
+        }
         catBar.appendChild(wrap);
       });
 
-      // fechar submenus ao clicar fora (mobile)
+      // fecha submenus ao clicar fora (mobile)
       document.addEventListener('click',(e)=>{
         if(!e.target.closest('.cat-item')) $$(".cat-item.open").forEach(el=>el.classList.remove('open'));
       },{once:true});
@@ -277,42 +233,40 @@
     function render(){
       let list=PRODUCTS.filter(p=>(!activeCat || p.categoria===activeCat) && (!activeSub || p.subcategoria===activeSub));
       if(query){ list=list.filter(p=>(p.nome+p.sku+(p.tags||[]).join(" ")+(p.marca||"")).toLowerCase().includes(query)); }
+
       grid.innerHTML="";
       if(!list.length){ empty.style.display=""; empty.textContent="Nenhum produto encontrado."; return; }
       empty.style.display="none";
 
       list.forEach(p=>{
         const c=document.createElement("article"); c.className="card";
-        const img=p.imagem_principal||"";
         c.innerHTML=`
-          <img class="thumb" src="${img}" alt="${p.nome}">
+          <img class="thumb" src="${p.imagem_principal||""}" alt="${p.nome}">
           <div class="body">
             <h3 class="title">${p.nome}</h3>
             <div class="meta">${p.marca||""} ${p.sku?`• SKU ${p.sku}`:""}</div>
-            ${STORE.showPrices && p.preco!=null ? `<div class="price">${fmt(p.preco)}</div>` : ""}
+            ${STORE.showPrices&&p.preco!=null?`<div class="price">${fmt(p.preco)}</div>`:""}
           </div>
           <div class="actions">
             <button class="btn whats">Pedir no WhatsApp</button>
             <button class="btn quote">Solicitar orçamento</button>
           </div>`;
         c.querySelector(".btn.whats").onclick=()=>{
-          const msg=`Olá! Tenho interesse no produto:\n• ${p.nome}\n• SKU: ${p.sku || "-"}`;
+          const msg=`Olá! Tenho interesse no produto:\n• ${p.nome}\n• SKU: ${p.sku||"-"}`;
           window.open(`https://wa.me/${STORE.whatsappNumber}?text=${encodeURIComponent(msg)}`,"_blank");
         };
         c.querySelector(".btn.quote").onclick=()=>{
-          const msg=`Olá! Gostaria de solicitar orçamento:\n• Produto: ${p.nome}\n• SKU: ${p.sku || "-"}\n• Quantidade: ______\n\nMeus dados:\n• Nome:\n• Telefone:\n• Cidade:`;
+          const msg=`Olá! Gostaria de solicitar orçamento:\n• Produto: ${p.nome}\n• SKU: ${p.sku||"-"}\n• Quantidade: ______\n\nMeus dados:\n• Nome:\n• Telefone:\n• Cidade:`;
           window.open(`https://wa.me/${STORE.whatsappNumber}?text=${encodeURIComponent(msg)}`,"_blank");
         };
         grid.appendChild(c);
       });
     }
 
-    search.oninput=e=>{ query=(e.target.value||"").toLowerCase(); render(); };
+    search.oninput=e=>{query=(e.target.value||"").toLowerCase(); render();};
 
     (async function init(){
-      await loadProducts();      // CSV -> fallback JSON
-      buildCatsWithSubmenus();   // categorias com submenu no hover
-      render();                  // lista
+      await loadProducts(); buildCatsWithSubmenus(); render();
     })();
   </script>
 </body>
