@@ -42,5 +42,16 @@
     "preco": 588.06,
     "tags": "disjuntor,caixa moldada,weg, tripolar,40a",
     "imagem_principal": "disjuntor-agw050.webp"
+    },
+  {
+    "id": 10435,
+    "sku": 15265508,
+    "nome": "Disjuntor MDWP 1x2a C",
+    "marca": "WEG",
+    "categoria": "Comandos Elétricos",
+    "subcategoria": "Disjuntor mini",
+    "preco": 30.66,
+    "tags": "isjuntor,mdwp,weg, monopolar,4a, curva C",
+    "imagem_principal": "disjuntor-mdwp1.jpg"
   }
 ]
