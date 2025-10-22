@@ -106,15 +106,32 @@
     .cart-close{background:none;border:none;font-size:24px;line-height:1;cursor:pointer}
     .cart-body{flex:1;overflow:auto;padding:12px}
     .cart-empty{color:#64748b;text-align:center;padding:24px;border:1px dashed var(--border);border-radius:12px;background:#fff}
+
     .cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:10px;padding:10px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:#fff}
     .cart-item img{width:64px;height:64px;object-fit:contain;background:#f8fafc;border:1px solid var(--border);border-radius:10px}
     .cart-title{font-weight:600;margin:0;font-size:14px}
     .cart-meta{font-size:12px;color:#6b7280}
+
+    /* quantidade */
     .qty{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
     .qty button{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer}
     .qty input{width:42px;text-align:center;border:1px solid var(--border);border-radius:8px;padding:5px}
+
     .cart-price{font-weight:700;font-size:14px;text-align:right}
-    .cart-remove{margin-top:8px;background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px}
+
+    /* botão remover como link separado */
+    .cart-remove{
+      display:inline-block;
+      margin-top:6px;
+      color:#ef4444;
+      font-size:13px;
+      background:none;
+      border:none;
+      cursor:pointer;
+      text-decoration:none;
+      font-weight:600;
+    }
+    .cart-remove:hover{ text-decoration:underline; }
 
     .cart-footer{border-top:1px solid var(--border);padding:12px;display:grid;gap:10px;background:#fff}
     .totals{display:flex;justify-content:space-between;align-items:center}
@@ -131,7 +148,7 @@
     <div class="container">
       <div class="topbar">
         <div class="brand">
-          <img src="logo-2020112409591056600.png?v=8" alt="Logo Masterluz" class="logo">
+          <img src="logo-2020112409591056600.png?v=9" alt="Logo Masterluz" class="logo">
           <h1 class="sr-only">Masterluz — Catálogo Online</h1>
         </div>
         <div class="searchbar"><input id="search" type="search" placeholder="Buscar produtos..."></div>
@@ -391,8 +408,8 @@
               <button aria-label="Diminuir" data-dec="${it.id}">−</button>
               <input type="number" min="1" value="${it.qty}" data-qty="${it.id}">
               <button aria-label="Aumentar" data-inc="${it.id}">+</button>
-              <button class="cart-remove" data-rm="${it.id}">Remover</button>
             </div>
+            <button class="cart-remove" data-rm="${it.id}">Remover</button>
           </div>
           <div class="cart-price">${(it.preco||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</div>
         `;
@@ -435,9 +452,8 @@
     (async function init(){
       // dados
       try{ await loadFromCSV(); }catch{ try{ await loadFromJSON(); }catch{} }
-      // carrinho (estado salvo)
-      try{ CART = JSON.parse(localStorage.getItem("cart")||"[]"); }catch{ CART=[]; }
-      updateBadge();
+      // carrinho salvo
+      loadCart();
 
       buildCatsWithSubmenus();
       render();
@@ -451,21 +467,19 @@
       $("#sendWpp").onclick = sendCartWhats;
       document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeCart(); });
 
-      // >>> Delegação de eventos no corpo do carrinho (remove/+/−/qty)
+      // Delegação de eventos no corpo do carrinho (remove/+/−/qty)
       cartBody.addEventListener('click', (e)=>{
-        const dec = e.target.closest('[data-dec]');
+        const decBtn = e.target.closest('[data-dec]');
         const incBtn = e.target.closest('[data-inc]');
-        const rm = e.target.closest('[data-rm]');
-        if(dec){ e.preventDefault(); dec && dec.dataset.dec && decQty(dec.dataset.dec); }
-        if(incBtn){ e.preventDefault(); incBtn && incBtn.dataset.inc && inc(incBtn.dataset.inc); }
-        if(rm){ e.preventDefault(); rm && rm.dataset.rm && removeFromCart(rm.dataset.rm); }
+        const rmBtn  = e.target.closest('[data-rm]');
+        if(decBtn){ e.preventDefault(); dec(decBtn.dataset.dec); }
+        if(incBtn){ e.preventDefault(); inc(incBtn.dataset.inc); }
+        if(rmBtn){  e.preventDefault(); removeFromCart(rmBtn.dataset.rm); }
       });
       cartBody.addEventListener('change', (e)=>{
         const qty = e.target.closest('[data-qty]');
         if(qty){ setQty(qty.dataset.qty, e.target.value); }
       });
-
-      function decQty(id){ dec(id); }
     })();
   </script>
 </body>
