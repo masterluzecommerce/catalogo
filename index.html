@@ -113,7 +113,7 @@
     .footer a:hover{text-decoration:underline}
     .empty{
       border:1px dashed var(--border);
-      border-radius:14px;padding:20px;text-align:center;color:var(--muted);background:#fff
+      border-radius:14px;padding:20px;text-align:center;color:#64748b;background:#fff
     }
   </style>
 </head>
@@ -124,8 +124,8 @@
     <div class="container">
       <div class="topbar">
         <div class="brand">
-          <!-- IMPORTANTE: no seu repositório a logo está na RAIZ -->
-          <img src="logo-2020112409591056600.png" alt="Logo Masterluz" class="logo">
+          <!-- LOGO na RAIZ do repositório -->
+          <img src="logo-2020112409591056600.png?v=2" alt="Logo Masterluz" class="logo">
           <h1 class="sr-only">Masterluz — Catálogo Online</h1>
         </div>
         <div class="searchbar"><input id="search" type="search" placeholder="Buscar produtos..."></div>
@@ -184,53 +184,113 @@
     // Estado
     let PRODUCTS=[], activeCat="", activeSub="", query="";
 
-    /**
-     * Lê o arquivo produtos.json (gerado da sua planilha)
-     * e normaliza os campos para o site (tags como array, preço como número etc.)
-     */
+    /* ---------------- CSV PARSER (aceita vírgula ou ponto e vírgula, com aspas) ------------- */
+    function detectSeparator(headerLine){
+      // se tiver mais ; que , usamos ; — funciona bem pra CSVs salvos no Excel em pt-BR
+      const commas = (headerLine.match(/,/g)||[]).length;
+      const semis  = (headerLine.match(/;/g)||[]).length;
+      return semis>commas ? ';' : ',';
+    }
+
+    function parseCSV(text){
+      text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+      if(!text) return { headers:[], rows:[] };
+      const firstLine = text.split('\n')[0];
+      const sep = detectSeparator(firstLine);
+
+      const lines = [];
+      let row = [], cell = '', inQuotes = false;
+      const pushCell = ()=>{ row.push(cell); cell=''; };
+      const pushRow  = ()=>{ lines.push(row); row=[]; };
+
+      for(let i=0;i<text.length;i++){
+        const ch = text[i];
+        const next = text[i+1];
+
+        if(inQuotes){
+          if(ch === '"' && next === '"'){ cell += '"'; i++; continue; } // aspas escapadas
+          if(ch === '"'){ inQuotes = false; continue; }
+          cell += ch; continue;
+        }
+
+        if(ch === '"'){ inQuotes = true; continue; }
+        if(ch === sep){ pushCell(); continue; }
+        if(ch === '\n'){ pushCell(); pushRow(); continue; }
+        cell += ch;
+      }
+      // último campo/linha
+      pushCell(); if(row.length) pushRow();
+
+      const headers = lines.shift().map(h=>h.trim());
+      const rows = lines.map(cols=>{
+        const obj = {};
+        headers.forEach((h,idx)=>{ obj[h] = (cols[idx]??'').trim(); });
+        return obj;
+      });
+      return { headers, rows };
+    }
+
+    /* ---------------- Carrega CSV com fallback para JSON ---------------- */
+    async function loadFromCSV(){
+      const res = await fetch('produtos.csv', { cache:'no-store' });
+      if(!res.ok) throw new Error('CSV não encontrado');
+      const text = await res.text();
+      const { headers, rows } = parseCSV(text);
+
+      // Mapeamento esperado
+      const must = ["id","sku","nome","marca","categoria","subcategoria","preco","tags","imagem_principal"];
+      const hasAll = must.every(h => headers.includes(h));
+      if(!hasAll) console.warn('CSV com cabeçalhos diferentes; esperando:', must);
+
+      // Normalização
+      PRODUCTS = rows.map(p=>{
+        const precoNum = parseFloat(String(p.preco||'').replace('.','').replace(',','.')) || parseFloat(p.preco);
+        let tags = Array.isArray(p.tags) ? p.tags : String(p.tags||'').split(',');
+        tags = tags.map(t=>String(t).trim()).filter(Boolean);
+
+        return {
+          id: p.id || "",
+          sku: p.sku || "",
+          nome: p.nome || "",
+          marca: p.marca || "",
+          categoria: p.categoria || "",
+          subcategoria: p.subcategoria || "",
+          preco: isNaN(precoNum) ? null : precoNum,
+          tags,
+          imagem_principal: p.imagem_principal || ""
+        };
+      });
+    }
+
+    async function loadFromJSON(){
+      const res = await fetch('produtos.json', { cache:'no-store' });
+      if(!res.ok) throw new Error('JSON não encontrado');
+      const raw = await res.json();
+      PRODUCTS = (raw||[]).map(p=>{
+        let tags = Array.isArray(p.tags) ? p.tags : String(p.tags||'').split(',');
+        tags = tags.map(t=>String(t).trim()).filter(Boolean);
+        const precoNum = (typeof p.preco==='number') ? p.preco : parseFloat(String(p.preco||'').replace(',','.'));
+        return {
+          id: p.id||"", sku: p.sku||"", nome: p.nome||"", marca: p.marca||"",
+          categoria: p.categoria||"", subcategoria: p.subcategoria||"",
+          preco: isNaN(precoNum) ? null : precoNum, tags,
+          imagem_principal: p.imagem_principal||""
+        };
+      });
+    }
+
     async function loadProducts(){
       try{
-        // cache: 'no-store' garante pegar a versão mais nova no GitHub Pages
-        const res = await fetch('produtos.json', { cache: 'no-store' });
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
-        const raw = await res.json();
-
-        // Normalização: garante que todo produto tenha o formato esperado
-        PRODUCTS = (raw || []).map(p=>{
-          // tags: aceitar string "a,b,c" OU array ["a","b","c"]
-          let tags = Array.isArray(p.tags) ? p.tags
-                    : (typeof p.tags === 'string' ? p.tags.split(',') : []);
-          tags = tags.map(t=>String(t).trim()).filter(Boolean);
-
-          // preço: garantir number
-          const preco = (typeof p.preco === 'number') ? p.preco : parseFloat(String(p.preco).replace(',', '.'));
-
-          return {
-            id: p.id ?? "",
-            sku: p.sku ?? "",
-            nome: p.nome ?? "",
-            marca: p.marca ?? "",
-            categoria: p.categoria ?? "",
-            subcategoria: p.subcategoria ?? "",
-            preco: isNaN(preco) ? null : preco,
-            tags,
-            // Se no JSON vier só o nome do arquivo (ex: "produto1.webp"), assumimos pasta img/
-            imagem_principal: p.imagem_principal ? p.imagem_principal : ""
-          };
-        });
-
-      }catch(err){
-        console.error("Erro ao carregar produtos.json:", err);
-        PRODUCTS = [];
-        empty.style.display="";
-        empty.textContent = "Não foi possível carregar os produtos. Verifique o arquivo produtos.json.";
+        await loadFromCSV();               // tenta CSV primeiro
+      }catch(e){
+        console.warn('CSV indisponível, tentando JSON…', e);
+        await loadFromJSON();              // fallback para JSON
       }
     }
 
-    // Formata valor
+    // Formatação monetária
     const fmt = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
-    // Constrói botões de categoria
     function buildCats(){
       const cats=[...new Set(PRODUCTS.map(p=>p.categoria).filter(Boolean))].sort();
       catPills.innerHTML="";
@@ -256,7 +316,6 @@
       });
     }
 
-    // Constrói o select de subcategorias com base na categoria ativa
     function buildSubcats(){
       const base = PRODUCTS.filter(p=>!activeCat || p.categoria===activeCat);
       const subs = [...new Set(base.map(p=>p.subcategoria).filter(Boolean))].sort();
@@ -264,7 +323,6 @@
         subs.map(s=>`<option ${s===activeSub?'selected':''} value="${s}">${s}</option>`).join("");
     }
 
-    // Renderiza os cards
     function render(){
       let list = PRODUCTS.filter(p=>(!activeCat || p.categoria===activeCat) && (!activeSub || p.subcategoria===activeSub));
       if(query){ list = list.filter(p=> (p.nome+p.sku+(p.tags||[]).join(" ")+(p.marca||"")).toLowerCase().includes(query)); }
@@ -276,7 +334,7 @@
       list.forEach(p=>{
         const c=document.createElement("article");
         c.className="card";
-        const imgSrc = p.imagem_principal || ""; // se vazio, o navegador mostrará um espaço
+        const imgSrc = p.imagem_principal || "";
         c.innerHTML=`
           <img class="thumb" src="${imgSrc}" alt="${p.nome}">
           <div class="body">
@@ -290,13 +348,12 @@
           </div>
         `;
 
-        // Botão: Pedir no WhatsApp
+        // Ações
         c.querySelector(".btn.whats").onclick = ()=>{
           const msg = `Olá! Tenho interesse no produto:\n• ${p.nome}\n• SKU: ${p.sku || "-"}\nPode me enviar mais detalhes?`;
           window.open(`https://wa.me/${STORE.whatsappNumber}?text=${encodeURIComponent(msg)}`,"_blank");
         };
 
-        // Botão: Solicitar orçamento (via WhatsApp)
         c.querySelector(".btn.quote").onclick = ()=>{
           const msg = `Olá! Gostaria de solicitar orçamento:\n• Produto: ${p.nome}\n• SKU: ${p.sku || "-"}\n• Quantidade: ______\n\nMeus dados:\n• Nome:\n• Telefone:\n• Cidade:`;
           window.open(`https://wa.me/${STORE.whatsappNumber}?text=${encodeURIComponent(msg)}`,"_blank");
@@ -306,16 +363,14 @@
       });
     }
 
-    // Eventos
     search.oninput = e => { query = (e.target.value||"").toLowerCase(); render(); };
     subcat.onchange = e => { activeSub = e.target.value; render(); };
 
-    // Init
     (async function init(){
-      await loadProducts();   // 1) carrega produtos.json
-      buildCats();            // 2) constrói categorias
-      buildSubcats();         // 3) constrói subcategorias
-      render();               // 4) renderiza a grade
+      await loadProducts();   // 1) tenta CSV e cai pro JSON se faltar
+      buildCats();            // 2) categorias
+      buildSubcats();         // 3) subcategorias
+      render();               // 4) cards
     })();
   </script>
 </body>
