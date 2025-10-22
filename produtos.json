@@ -51,7 +51,18 @@
     "categoria": "Comandos Elétricos",
     "subcategoria": "Disjuntor mini",
     "preco": 30.66,
-    "tags": "isjuntor,mdwp,weg, monopolar,4a, curva C",
+    "tags": "disjuntor,mdwp,weg, monopolar,4a, curva C",
     "imagem_principal": "disjuntor-mdwp1.jpg"
+     },
+  {
+    "id": 9828,
+    "sku": C906697.0000,
+    "nome": "Abraçadeira de nylon 100x2.5mm (CENTO)",
+    "marca": "WEIDMULLER",
+    "categoria": "Acessórios de montagem",
+    "subcategoria": "Abraçadeiras e fixadores",
+    "preco": 11.30,
+    "tags": "abraçadeira de nylon, weidmuller,enforca gato, abraçadeira, 100x2.5mm",
+    "imagem_principal": "abracadeira.png"
   }
 ]
