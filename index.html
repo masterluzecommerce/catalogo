@@ -22,12 +22,7 @@
     }
 
     *{box-sizing:border-box}
-    html,body{
-      margin:0;padding:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
-      color:var(--text);
-      background:#fff;
-    }
+    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;color:var(--text);background:#fff}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
     /* HEADER */
@@ -42,27 +37,32 @@
 
     /* FILTROS: CATEGORIAS + SUBMENUS */
     main{padding:24px 0}
-    .filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;position:relative}
-    .pill{background:#fff;border:1px solid var(--border);border-radius:999px;padding:8px 12px;cursor:pointer;font-size:14px;transition:background .2s,color .2s;position:relative}
+    .filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    #cat-bar{display:flex;gap:10px;flex-wrap:wrap;position:relative}
+
+    .pill{
+      background:#fff;border:1px solid var(--border);border-radius:999px;
+      padding:8px 12px;cursor:pointer;font-size:14px;transition:background .2s,color .2s;position:relative
+    }
     .pill.active{background:var(--brand);color:#fff;border-color:var(--brand)}
     .pill:hover{background:var(--brand);color:#fff}
 
-    /* Container de cada categoria que pode abrir submenu */
     .cat-item{position:relative}
     .submenu{
-      position:absolute; top:44px; left:0;
-      min-width:220px; background:#fff; border:1px solid var(--border); border-radius:12px;
+      position:absolute; top:44px; left:0; min-width:220px;
+      background:#fff; border:1px solid var(--border); border-radius:12px;
       box-shadow:var(--shadow); padding:8px; display:none; z-index:50;
     }
     .submenu a{
       display:block; padding:8px 10px; border-radius:8px; text-decoration:none; color:var(--text); font-size:14px;
     }
     .submenu a:hover{background:#F3F7FF; color:#0f172a}
-    /* Mostrar no hover (desktop) */
+
+    /* Mostrar submenu no hover (desktop) */
     @media (hover:hover){
       .cat-item:hover > .submenu{display:block}
     }
-    /* No mobile, abrimos via classe .open */
+    /* Em dispositivos sem hover (mobile), controlamos com .open */
     .cat-item.open > .submenu{display:block}
 
     /* GRID DE PRODUTOS */
@@ -95,7 +95,7 @@
     <div class="container">
       <div class="topbar">
         <div class="brand">
-          <img src="logo-2020112409591056600.png?v=3" alt="Logo Masterluz" class="logo">
+          <img src="logo-2020112409591056600.png?v=4" alt="Logo Masterluz" class="logo">
           <h1 class="sr-only">Masterluz — Catálogo Online</h1>
         </div>
         <div class="searchbar"><input id="search" type="search" placeholder="Buscar produtos..."></div>
@@ -106,8 +106,7 @@
   <!-- CONTEÚDO -->
   <main class="container" id="app">
     <section class="filters">
-      <!-- onde as categorias + submenus serão inseridos -->
-      <div id="cat-bar" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+      <div id="cat-bar"></div>
     </section>
 
     <section id="grid" class="grid"></section>
@@ -122,7 +121,7 @@
           <h3>Onde estamos</h3>
           <p>Estrada União e Indústria, 11357, Itaipava, Petrópolis, RJ, 25730-740</p>
           <p>Horário: Seg a Sex 08:00–18:00 • Sáb 09:00–18:00</p>
-          <p>WhatsApp: <a href="https://wa.me/5524222222633" target="_blank" rel="noopener">+55 24 2222-2633</a></p>
+          <p>WhatsApp: <a href="https://wa.me/552422222633" target="_blank" rel="noopener">+55 24 2222-2633</a></p>
         </div>
         <div>
           <h3>Fale conosco</h3>
@@ -146,7 +145,6 @@
   <script>
     const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
     const grid=$("#grid"), empty=$("#empty"), catBar=$("#cat-bar"), search=$("#search");
-
     let PRODUCTS=[], activeCat="", activeSub="", query="";
 
     /* ---------- CSV parser (vírgula ou ponto e vírgula) ---------- */
@@ -212,11 +210,11 @@
 
     const fmt=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
-    /* ----- construir barra de categorias com submenu de subcategorias ----- */
+    /* ----- construir barra de categorias com submenu de subcategorias (hover) ----- */
     function buildCatsWithSubmenus(){
       const cats=[...new Set(PRODUCTS.map(p=>p.categoria).filter(Boolean))].sort();
-
       catBar.innerHTML="";
+
       // Botão "Todas"
       const allWrap=document.createElement("div"); allWrap.className="cat-item";
       const bAll=document.createElement("button"); bAll.className="pill"+(!activeCat?" active":""); bAll.textContent="Todas";
@@ -229,42 +227,48 @@
         const btn=document.createElement("button");
         btn.className="pill"+(activeCat===cat?" active":""); btn.textContent=cat;
 
-        // Submenu dessa categoria
         const subs=[...new Set(PRODUCTS.filter(p=>p.categoria===cat).map(p=>p.subcategoria).filter(Boolean))].sort();
-        const menu=document.createElement("div"); menu.className="submenu";
-        menu.innerHTML = [`<a href="#" data-sub="">Todas as subcategorias</a>`]
-          .concat(subs.map(s=>`<a href="#" data-sub="${s.replace(/"/g,'&quot;')}">${s}</a>`))
-          .join("");
+        if(subs.length){
+          const menu=document.createElement("div"); menu.className="submenu";
+          menu.innerHTML = [`<a href="#" data-sub="">Todas as subcategorias</a>`]
+            .concat(subs.map(s=>`<a href="#" data-sub="${s.replace(/"/g,'&quot;')}">${s}</a>`))
+            .join("");
 
-        // Clique na categoria (desktop: não faz nada; mobile: abre/fecha)
-        btn.addEventListener('click',(e)=>{
-          // se for mobile (ou ambiente sem hover), alterna abrir/fechar
-          const mql = window.matchMedia('(hover: none)');
-          if(mql.matches){
+          // clique/tap nas subcategorias
+          menu.addEventListener('click',(e)=>{
+            const a=e.target.closest('a'); if(!a) return;
             e.preventDefault();
-            // fecha outros
-            $$(".cat-item.open").forEach(el=>{ if(el!==wrap) el.classList.remove('open'); });
-            wrap.classList.toggle('open');
-          }
-        });
+            activeCat=cat;
+            activeSub=a.dataset.sub || "";
+            wrap.classList.remove('open');
+            render(); buildCatsWithSubmenus();
+          });
 
-        // Clique em subcategoria
-        menu.addEventListener('click',(e)=>{
-          const a = e.target.closest('a'); if(!a) return;
-          e.preventDefault();
-          activeCat = cat;
-          activeSub = a.dataset.sub || "";
-          wrap.classList.remove('open');
-          render();
-          buildCatsWithSubmenus();
-        });
+          wrap.appendChild(menu);
+
+          // no mobile (sem hover) abre/fecha
+          btn.addEventListener('click',(e)=>{
+            const mql=window.matchMedia('(hover: none)');
+            if(mql.matches){
+              e.preventDefault();
+              $$(".cat-item.open").forEach(el=>{ if(el!==wrap) el.classList.remove('open'); });
+              wrap.classList.toggle('open');
+            }
+          });
+        }else{
+          // categoria sem subcategorias: clique filtra direto
+          btn.addEventListener('click', ()=>{
+            activeCat = (activeCat===cat ? "" : cat);
+            activeSub = "";
+            render(); buildCatsWithSubmenus();
+          });
+        }
 
         wrap.appendChild(btn);
-        if(subs.length){ wrap.appendChild(menu); }
         catBar.appendChild(wrap);
       });
 
-      // Fechar submenus ao clicar fora (mobile)
+      // fechar submenus ao clicar fora (mobile)
       document.addEventListener('click',(e)=>{
         if(!e.target.closest('.cat-item')) $$(".cat-item.open").forEach(el=>el.classList.remove('open'));
       },{once:true});
@@ -306,9 +310,9 @@
     search.oninput=e=>{ query=(e.target.value||"").toLowerCase(); render(); };
 
     (async function init(){
-      await loadProducts();     // CSV -> fallback JSON
-      buildCatsWithSubmenus();  // categorias com submenu
-      render();                 // lista
+      await loadProducts();      // CSV -> fallback JSON
+      buildCatsWithSubmenus();   // categorias com submenu no hover
+      render();                  // lista
     })();
   </script>
 </body>
