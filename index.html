@@ -38,7 +38,7 @@
     header{
       background:linear-gradient(180deg,var(--bg-2),var(--bg));
       color:#fff;
-      padding:18px 16px; /* cabeçalho mais baixo */
+      padding:18px 16px;
     }
     .container{max-width:1200px;margin:0 auto;padding:0 16px}
     .topbar{
@@ -48,8 +48,7 @@
 
     .brand{display:flex;align-items:center;gap:12px;min-height:64px}
     .logo{
-      height:90px; /* destaque da logo */
-      width:auto;display:block;object-fit:contain;
+      height:90px; width:auto; display:block; object-fit:contain;
       filter:drop-shadow(0 2px 6px rgba(0,0,0,.25));
     }
     @media (max-width:600px){.logo{height:70px}}
@@ -60,8 +59,7 @@
     }
     .searchbar input{
       flex:1;border:1px solid var(--border);
-      border-radius:999px;padding:14px 18px;
-      outline:none;
+      border-radius:999px;padding:14px 18px;outline:none;
     }
 
     /* CONTEÚDO PRINCIPAL */
@@ -74,9 +72,13 @@
     }
     .pill.active{background:var(--brand);color:#fff;border-color:var(--brand)}
     .pill:hover{background:var(--brand);color:#fff}
+
     .subcat-select{
       padding:8px 10px;border:1px solid var(--border);
-      border-radius:10px;background:#fff;font-size:14px;min-width:200px
+      border-radius:10px;background:#fff;font-size:14px;min-width:220px
+    }
+    .subcat-select:disabled{
+      opacity:.55; cursor:not-allowed; background:#f8fafc;
     }
 
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
@@ -124,7 +126,6 @@
     <div class="container">
       <div class="topbar">
         <div class="brand">
-          <!-- LOGO na RAIZ do repositório -->
           <img src="logo-2020112409591056600.png?v=2" alt="Logo Masterluz" class="logo">
           <h1 class="sr-only">Masterluz — Catálogo Online</h1>
         </div>
@@ -137,7 +138,9 @@
   <main class="container" id="app">
     <section class="filters">
       <div id="cat-pills"></div>
-      <select id="subcat" class="subcat-select"><option value="">Todas as subcategorias</option></select>
+      <select id="subcat" class="subcat-select" disabled>
+        <option value="">Selecione uma categoria</option>
+      </select>
     </section>
     <section id="grid" class="grid"></section>
     <section id="empty" class="empty" style="display:none">Nenhum produto encontrado.</section>
@@ -165,7 +168,7 @@
   <script>
     const STORE = {
       name:"Masterluz",
-      whatsappNumber:"552422222633",     // DDI+DDD+número (só dígitos)
+      whatsappNumber:"552422222633",
       email:"sac@masterluz.com.br",
       addressText:"Estrada União e Indústria, 11357, Itaipava, Petrópolis, RJ, 25730-740",
       hoursText:"Seg a Sex 08:00–18:00 • Sáb 09:00–18:00",
@@ -173,159 +176,134 @@
     };
   </script>
 
-  <!-- =============== LÓGICA DO CATÁLOGO =============== -->
+  <!-- =============== LÓGICA DO CATÁLOGO (CSV + fallback JSON) =============== -->
   <script>
-    // Atalhos
     const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
-
-    // Elementos
     const grid=$("#grid"), empty=$("#empty"), catPills=$("#cat-pills"), subcat=$("#subcat"), search=$("#search");
 
-    // Estado
     let PRODUCTS=[], activeCat="", activeSub="", query="";
 
-    /* ---------------- CSV PARSER (aceita vírgula ou ponto e vírgula, com aspas) ------------- */
     function detectSeparator(headerLine){
-      // se tiver mais ; que , usamos ; — funciona bem pra CSVs salvos no Excel em pt-BR
-      const commas = (headerLine.match(/,/g)||[]).length;
-      const semis  = (headerLine.match(/;/g)||[]).length;
-      return semis>commas ? ';' : ',';
+      const commas=(headerLine.match(/,/g)||[]).length;
+      const semis=(headerLine.match(/;/g)||[]).length;
+      return semis>commas?';':',';
     }
-
     function parseCSV(text){
-      text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-      if(!text) return { headers:[], rows:[] };
-      const firstLine = text.split('\n')[0];
-      const sep = detectSeparator(firstLine);
+      text=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim();
+      if(!text) return {headers:[],rows:[]};
+      const firstLine=text.split('\n')[0];
+      const sep=detectSeparator(firstLine);
 
-      const lines = [];
-      let row = [], cell = '', inQuotes = false;
-      const pushCell = ()=>{ row.push(cell); cell=''; };
-      const pushRow  = ()=>{ lines.push(row); row=[]; };
-
+      const lines=[], rowPush=()=>{lines.push(row); row=[];}, cellPush=()=>{row.push(cell); cell='';};
+      let row=[], cell='', inQ=false;
       for(let i=0;i<text.length;i++){
-        const ch = text[i];
-        const next = text[i+1];
-
-        if(inQuotes){
-          if(ch === '"' && next === '"'){ cell += '"'; i++; continue; } // aspas escapadas
-          if(ch === '"'){ inQuotes = false; continue; }
-          cell += ch; continue;
+        const ch=text[i], next=text[i+1];
+        if(inQ){
+          if(ch=='"'&&next=='"'){cell+='"'; i++; continue;}
+          if(ch=='"'){inQ=false; continue;}
+          cell+=ch; continue;
         }
-
-        if(ch === '"'){ inQuotes = true; continue; }
-        if(ch === sep){ pushCell(); continue; }
-        if(ch === '\n'){ pushCell(); pushRow(); continue; }
-        cell += ch;
+        if(ch=='"'){inQ=true; continue;}
+        if(ch==sep){cellPush(); continue;}
+        if(ch=='\n'){cellPush(); rowPush(); continue;}
+        cell+=ch;
       }
-      // último campo/linha
-      pushCell(); if(row.length) pushRow();
-
-      const headers = lines.shift().map(h=>h.trim());
-      const rows = lines.map(cols=>{
-        const obj = {};
-        headers.forEach((h,idx)=>{ obj[h] = (cols[idx]??'').trim(); });
-        return obj;
+      cellPush(); if(row.length) rowPush();
+      const headers=lines.shift().map(h=>h.trim());
+      const rows=lines.map(cols=>{
+        const obj={}; headers.forEach((h,i)=>obj[h]=(cols[i]??'').trim()); return obj;
       });
-      return { headers, rows };
+      return {headers,rows};
     }
 
-    /* ---------------- Carrega CSV com fallback para JSON ---------------- */
     async function loadFromCSV(){
-      const res = await fetch('produtos.csv', { cache:'no-store' });
+      const res=await fetch('produtos.csv',{cache:'no-store'});
       if(!res.ok) throw new Error('CSV não encontrado');
-      const text = await res.text();
-      const { headers, rows } = parseCSV(text);
+      const text=await res.text();
+      const {headers,rows}=parseCSV(text);
 
-      // Mapeamento esperado
-      const must = ["id","sku","nome","marca","categoria","subcategoria","preco","tags","imagem_principal"];
-      const hasAll = must.every(h => headers.includes(h));
-      if(!hasAll) console.warn('CSV com cabeçalhos diferentes; esperando:', must);
-
-      // Normalização
-      PRODUCTS = rows.map(p=>{
-        const precoNum = parseFloat(String(p.preco||'').replace('.','').replace(',','.')) || parseFloat(p.preco);
-        let tags = Array.isArray(p.tags) ? p.tags : String(p.tags||'').split(',');
-        tags = tags.map(t=>String(t).trim()).filter(Boolean);
-
-        return {
-          id: p.id || "",
-          sku: p.sku || "",
-          nome: p.nome || "",
-          marca: p.marca || "",
-          categoria: p.categoria || "",
-          subcategoria: p.subcategoria || "",
-          preco: isNaN(precoNum) ? null : precoNum,
-          tags,
-          imagem_principal: p.imagem_principal || ""
+      PRODUCTS=rows.map(p=>{
+        const precoNum=parseFloat(String(p.preco||'').replace(/\./g,'').replace(',','.'));
+        let tags=Array.isArray(p.tags)?p.tags:String(p.tags||'').split(',');
+        tags=tags.map(t=>String(t).trim()).filter(Boolean);
+        return{
+          id:p.id||"", sku:p.sku||"", nome:p.nome||"", marca:p.marca||"",
+          categoria:p.categoria||"", subcategoria:p.subcategoria||"",
+          preco:isNaN(precoNum)?null:precoNum, tags,
+          imagem_principal:p.imagem_principal||""
         };
       });
     }
-
     async function loadFromJSON(){
-      const res = await fetch('produtos.json', { cache:'no-store' });
+      const res=await fetch('produtos.json',{cache:'no-store'});
       if(!res.ok) throw new Error('JSON não encontrado');
-      const raw = await res.json();
-      PRODUCTS = (raw||[]).map(p=>{
-        let tags = Array.isArray(p.tags) ? p.tags : String(p.tags||'').split(',');
-        tags = tags.map(t=>String(t).trim()).filter(Boolean);
-        const precoNum = (typeof p.preco==='number') ? p.preco : parseFloat(String(p.preco||'').replace(',','.'));
-        return {
-          id: p.id||"", sku: p.sku||"", nome: p.nome||"", marca: p.marca||"",
-          categoria: p.categoria||"", subcategoria: p.subcategoria||"",
-          preco: isNaN(precoNum) ? null : precoNum, tags,
-          imagem_principal: p.imagem_principal||""
+      const raw=await res.json();
+      PRODUCTS=(raw||[]).map(p=>{
+        const precoNum=(typeof p.preco==='number')?p.preco:parseFloat(String(p.preco||'').replace(',','.'));
+        let tags=Array.isArray(p.tags)?p.tags:String(p.tags||'').split(',');
+        tags=tags.map(t=>String(t).trim()).filter(Boolean);
+        return{
+          id:p.id||"", sku:p.sku||"", nome:p.nome||"", marca:p.marca||"",
+          categoria:p.categoria||"", subcategoria:p.subcategoria||"",
+          preco:isNaN(precoNum)?null:precoNum, tags,
+          imagem_principal:p.imagem_principal||""
         };
       });
     }
-
     async function loadProducts(){
-      try{
-        await loadFromCSV();               // tenta CSV primeiro
-      }catch(e){
-        console.warn('CSV indisponível, tentando JSON…', e);
-        await loadFromJSON();              // fallback para JSON
-      }
+      try{ await loadFromCSV(); }
+      catch(e){ console.warn('CSV indisponível, tentando JSON…',e); await loadFromJSON(); }
     }
 
-    // Formatação monetária
-    const fmt = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+    const fmt=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
     function buildCats(){
       const cats=[...new Set(PRODUCTS.map(p=>p.categoria).filter(Boolean))].sort();
       catPills.innerHTML="";
       const bAll=document.createElement("button");
-      bAll.className="pill active";
-      bAll.textContent="Todas";
-      bAll.onclick=()=>{ activeCat=""; activeSub=""; subcat.value=""; buildSubcats(); render(); highlightPills(); };
+      bAll.className="pill active"; bAll.textContent="Todas";
+      bAll.onclick=()=>{
+        activeCat=""; activeSub=""; subcat.value="";
+        buildSubcats(); render(); highlightPills();
+      };
       catPills.appendChild(bAll);
       cats.forEach(c=>{
         const b=document.createElement("button");
-        b.className="pill";
-        b.textContent=c;
-        b.onclick=()=>{ activeCat=(activeCat===c?"":c); activeSub=""; subcat.value=""; buildSubcats(); render(); highlightPills(); };
+        b.className="pill"; b.textContent=c;
+        b.onclick=()=>{
+          activeCat=(activeCat===c?"":c);
+          activeSub=""; subcat.value="";
+          buildSubcats(); render(); highlightPills();
+        };
         catPills.appendChild(b);
       });
     }
 
     function highlightPills(){
       $$(".pill").forEach(btn=>{
-        const isAll = btn.textContent==="Todas";
-        const active = (isAll && !activeCat) || (!isAll && btn.textContent===activeCat);
-        btn.classList.toggle("active", active);
+        const isAll=btn.textContent==="Todas";
+        const active=(isAll && !activeCat) || (!isAll && btn.textContent===activeCat);
+        btn.classList.toggle("active",active);
       });
     }
 
+    // >>> AJUSTE: subcategoria depende da categoria selecionada
     function buildSubcats(){
-      const base = PRODUCTS.filter(p=>!activeCat || p.categoria===activeCat);
-      const subs = [...new Set(base.map(p=>p.subcategoria).filter(Boolean))].sort();
-      subcat.innerHTML = `<option value="">Todas as subcategorias</option>` +
+      if(!activeCat){
+        subcat.disabled = true;
+        subcat.innerHTML = `<option value="">Selecione uma categoria</option>`;
+        return;
+      }
+      subcat.disabled = false;
+      const base=PRODUCTS.filter(p=>p.categoria===activeCat);
+      const subs=[...new Set(base.map(p=>p.subcategoria).filter(Boolean))].sort();
+      subcat.innerHTML=`<option value="">Todas as subcategorias</option>`+
         subs.map(s=>`<option ${s===activeSub?'selected':''} value="${s}">${s}</option>`).join("");
     }
 
     function render(){
-      let list = PRODUCTS.filter(p=>(!activeCat || p.categoria===activeCat) && (!activeSub || p.subcategoria===activeSub));
-      if(query){ list = list.filter(p=> (p.nome+p.sku+(p.tags||[]).join(" ")+(p.marca||"")).toLowerCase().includes(query)); }
+      let list=PRODUCTS.filter(p=>(!activeCat || p.categoria===activeCat) && (!activeSub || p.subcategoria===activeSub));
+      if(query){ list=list.filter(p=>(p.nome+p.sku+(p.tags||[]).join(" ")+(p.marca||"")).toLowerCase().includes(query)); }
 
       grid.innerHTML="";
       if(!list.length){ empty.style.display=""; empty.textContent="Nenhum produto encontrado."; return; }
@@ -334,7 +312,7 @@
       list.forEach(p=>{
         const c=document.createElement("article");
         c.className="card";
-        const imgSrc = p.imagem_principal || "";
+        const imgSrc=p.imagem_principal||"";
         c.innerHTML=`
           <img class="thumb" src="${imgSrc}" alt="${p.nome}">
           <div class="body">
@@ -347,30 +325,26 @@
             <button class="btn quote">Solicitar orçamento</button>
           </div>
         `;
-
-        // Ações
-        c.querySelector(".btn.whats").onclick = ()=>{
-          const msg = `Olá! Tenho interesse no produto:\n• ${p.nome}\n• SKU: ${p.sku || "-"}\nPode me enviar mais detalhes?`;
+        c.querySelector(".btn.whats").onclick=()=>{
+          const msg=`Olá! Tenho interesse no produto:\n• ${p.nome}\n• SKU: ${p.sku || "-"}`;
           window.open(`https://wa.me/${STORE.whatsappNumber}?text=${encodeURIComponent(msg)}`,"_blank");
         };
-
-        c.querySelector(".btn.quote").onclick = ()=>{
-          const msg = `Olá! Gostaria de solicitar orçamento:\n• Produto: ${p.nome}\n• SKU: ${p.sku || "-"}\n• Quantidade: ______\n\nMeus dados:\n• Nome:\n• Telefone:\n• Cidade:`;
+        c.querySelector(".btn.quote").onclick=()=>{
+          const msg=`Olá! Gostaria de solicitar orçamento:\n• Produto: ${p.nome}\n• SKU: ${p.sku || "-"}\n• Quantidade: ______\n\nMeus dados:\n• Nome:\n• Telefone:\n• Cidade:`;
           window.open(`https://wa.me/${STORE.whatsappNumber}?text=${encodeURIComponent(msg)}`,"_blank");
         };
-
         grid.appendChild(c);
       });
     }
 
-    search.oninput = e => { query = (e.target.value||"").toLowerCase(); render(); };
-    subcat.onchange = e => { activeSub = e.target.value; render(); };
+    search.oninput=e=>{ query=(e.target.value||"").toLowerCase(); render(); };
+    subcat.onchange=e=>{ activeSub=e.target.value; render(); };
 
     (async function init(){
-      await loadProducts();   // 1) tenta CSV e cai pro JSON se faltar
-      buildCats();            // 2) categorias
-      buildSubcats();         // 3) subcategorias
-      render();               // 4) cards
+      await loadProducts();
+      buildCats();
+      buildSubcats();
+      render();
     })();
   </script>
 </body>
