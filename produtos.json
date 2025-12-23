@@ -63,6 +63,17 @@
     "subcategoria": "Abraçadeiras e fixadores",
     "preco": 11.30,
     "tags": "abraçadeira de nylon, weidmuller,enforca gato, abraçadeira, 100x2.5mm",
-    "imagem_principal": "abracadeira.png"
+    "imagem_principal": "abracadeira.png",
     },
   {
+    "id": 10863,
+    "sku": 3071,
+    "nome": "Caixa cega Famatel Sampa 112X112X95MM ",
+    "marca": "Famatel",
+    "categoria": "Caixa e quadros",
+    "subcategoria": "Caixa de passagem",
+    "preco": 36.31,
+    "tags": "caixa de passagem, famatel, 112x112x95mm, caixa cega, caixa pequena",
+    "imagem_principal": "cx-famatel.png",
+  },
+]
