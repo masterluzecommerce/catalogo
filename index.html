@@ -231,7 +231,21 @@
       const r=await fetch('produtos.csv',{cache:'no-store'}); if(!r.ok) throw new Error('CSV');
       const {rows}=parseCSV(await r.text());
       PRODUCTS=rows.map(p=>{
-        const preco=parseFloat(String(p.preco||'').replace(/\./g,'').replace(',','.'));
+        const s = String(p.preco ?? '').trim();
+let preco = null;
+
+if (s) {
+  // Se tiver vírgula, formato PT-BR (1.234,56)
+  if (s.includes(',')) {
+    preco = parseFloat(s.replace(/\./g, '').replace(',', '.'));
+  } else {
+    // Senão, formato internacional (1234.56)
+    preco = parseFloat(s);
+  }
+}
+
+preco = Number.isFinite(preco) ? preco : null;
+
         let tags=Array.isArray(p.tags)?p.tags:String(p.tags||'').split(',');
         tags=tags.map(t=>String(t).trim()).filter(Boolean);
         return { id:p.id||"", sku:p.sku||"", nome:p.nome||"", marca:p.marca||"",
@@ -458,3 +472,4 @@
   </script>
 </body>
 </html>
+
